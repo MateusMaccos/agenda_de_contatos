@@ -4,10 +4,10 @@ import Pyro4
 @Pyro4.expose
 @Pyro4.behavior(instance_mode="single")
 class Agenda:
-    def __init__(self, nomeAgenda, ipNS, ipSV):
-        self.iniciar(nomeAgenda, ipNS, ipSV)
+    def __init__(self):
         self.estaOnline = True
         self.contatos = []
+        self.nome = None
 
     def atualizarAgenda(self):
         pass
@@ -25,6 +25,7 @@ class Agenda:
 
     def iniciar(self, nomeAgenda, ipNS, ipSV):
         daemon = Pyro4.Daemon(host=ipSV)
+        self.nome = nomeAgenda
         try:
             ns = Pyro4.locateNS(host=ipNS, port=9090)
             uri = daemon.register(self)
