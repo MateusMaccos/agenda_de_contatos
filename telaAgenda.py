@@ -51,11 +51,11 @@ class TelaAgenda:
         )
         self.botao_voltar.pack(pady=5)
 
-    def iniciar_agenda(self, nome_sv, ip_sn, ip_agenda):
+    def iniciar_agenda(self, nome_agenda, ip_sn, ip_agenda):
         self.instancia_sv_mensagens = Agenda()
         t_sv = threading.Thread(
             target=self.instancia_sv_mensagens.iniciar,
-            args=(nome_sv, ip_sn, ip_agenda),
+            args=(nome_agenda, ip_sn, ip_agenda),
             daemon=True,
         )
         t_sv.start()
@@ -83,9 +83,9 @@ class TelaAgenda:
             )
             self.lbl_ip_agenda.pack(pady=10)
 
-            self.lbl_nome_sv = tk.Label(
+            self.lbl_nome_agenda = tk.Label(
                 self.frame_agenda_iniciada, text=f"Nome: {nome_agenda}"
             )
-            self.lbl_nome_sv.pack(pady=10)
+            self.lbl_nome_agenda.pack(pady=10)
         except Exception as e:
             messagebox.showerror("Erro", f"Erro ao localizar o servidor de nomes: {e}")
