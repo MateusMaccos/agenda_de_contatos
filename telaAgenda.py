@@ -74,9 +74,9 @@ class TelaAgenda:
             return True
 
     def iniciar_agenda(self, nome_agenda, ip_agenda):
-        self.instancia_sv_mensagens = Agenda()
+        self.instancia_agenda = Agenda()
         t_sv = threading.Thread(
-            target=self.instancia_sv_mensagens.iniciar,
+            target=self.instancia_agenda.iniciar,
             args=(nome_agenda, self.ip_sn, ip_agenda),
             daemon=True,
         )

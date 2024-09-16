@@ -8,19 +8,21 @@ class Agenda:
         self.estaOnline = True
         self.contatos = []
         self.nome = None
-        self.outrasAgendas = []
+        self.agendasConectadas = []
+        self.ip_sn = None
 
-    def atualizarAgenda(self):
+    # 192.168.1.11
+    def conectarAgendas(self):
         agendas = ["agenda1", "agenda2", "agenda3"]
-        try:
-            for agenda in agendas:
-                if agenda != self.nome:
-                    instanciaOutraAgenda = Pyro4.Proxy(
-                        "PYRONAME:" + agenda + "@" + self.ip_sn + ":9090"
-                    )
-                    self.outrasAgendas.append(instanciaOutraAgenda)
-        except Exception as e:
-            print(e)
+        for agenda in agendas:
+            if agenda != self.nome:
+                try:
+                    destino_uri = self.ns.lookup(agenda)
+                    instanciaOutraAgenda = Pyro4.Proxy(destino_uri)
+                    self.agendasConectadas.append(instanciaOutraAgenda)
+                except Exception as e:
+                    print(e)
+        print(len(self.agendasConectadas))
 
     def adicionarContato(self, contato):
         self.contatos.append(contato)
@@ -33,14 +35,15 @@ class Agenda:
             if contato.nome == nomeContato:
                 return contato
 
-    def iniciar(self, nomeAgenda, ipSN, ipSV):
-        daemon = Pyro4.Daemon(host=ipSV)
+    def iniciar(self, nomeAgenda, ipSN, ipAgenda):
+        daemon = Pyro4.Daemon(host=ipAgenda)
         self.nome = nomeAgenda
         self.ip_sn = ipSN
         try:
-            ns = Pyro4.locateNS(host=ipSN, port=9090)
+            self.ns = Pyro4.locateNS(host=self.ip_sn, port=9090)
             uri = daemon.register(self)
-            ns.register(nomeAgenda, uri)
+            self.ns.register(nomeAgenda, uri)
+            self.conectarAgendas()
             daemon.requestLoop()
         except Exception as e:
             print(e)
