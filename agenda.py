@@ -1,5 +1,5 @@
 import Pyro4
-
+from contato import Contato
 
 @Pyro4.expose
 @Pyro4.behavior(instance_mode="single")
@@ -24,6 +24,13 @@ class Agenda:
                     print(e)
         print(len(self.agendasConectadas))
 
+    def retornarListaDeContatos(self):
+        listaDeStrings = []
+        for contato in self.contatos:
+            listaDeStrings.append([contato.nome,contato.telefone])
+        return listaDeStrings
+
+
     def adicionarContato(self, contato):
         self.contatos.append(contato)
 
@@ -34,7 +41,24 @@ class Agenda:
         for contato in self.contatos:
             if contato.nome == nomeContato:
                 return contato
-
+            
+    def atualizarContato(self,nomeContato,dadosAtualizados):
+        for contato in self.contatos:
+            if contato.nome == nomeContato:
+                contato.alterarNome(dadosAtualizados.nome)
+                contato.alterarTelefone(dadosAtualizados.telefone)
+    def mudarStatus(self):
+        if self.estaOnline==True:
+            self.estaOnline = False
+        else:
+            if len(self.agendasConectadas) != 0:
+                for agenda in self.agendasConectadas:
+                    if agenda.estaOnline:
+                        self.contatos.clear()
+                        for contato in agenda.retornarListaDeContatos():
+                            contatoAtualizado= Contato(contato[0],contato[1])
+                            self.contatos.append(contatoAtualizado)
+                            
     def iniciar(self, nomeAgenda, ipSN, ipAgenda):
         daemon = Pyro4.Daemon(host=ipAgenda)
         self.nome = nomeAgenda
