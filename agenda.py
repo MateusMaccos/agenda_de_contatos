@@ -6,7 +6,17 @@ from contato import Contato
 class Agenda:
     def __init__(self):
         self.estaOnline = True
-        self.contatos = []
+        self.contatos = [
+            Contato("Mateus","85996417275"),
+            Contato("Jorge","85996417275"),
+            Contato("Pedro","85996417275"),
+            Contato("Joao","85996417275"),
+            Contato("Picolo","85996417275"),
+            Contato("Heitor","85996417275"),
+            Contato("Guilherme","85996417275"),
+            Contato("Josias","85996417275"),
+            
+            ]
         self.nome = None
         self.agendasConectadas = []
         self.ip_sn = None

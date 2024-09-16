@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from telaServidorDeNomes import TelaServidorDeNomes
 from telaAgenda import TelaAgenda
-
+from telaCliente import TelaCliente
 
 class TelaInicial:
     def __init__(self):
@@ -47,6 +47,18 @@ class TelaInicial:
             ),
         )
         self.botao_agenda.pack(pady=10)
+
+        self.botao_cliente = ttk.Button(
+            self.menu_frame,
+            text="Criar Cliente",
+            style="Accent.TButton",
+            command=lambda: TelaCliente(
+                tela=self.tela,
+                menu=self.menu_frame,
+                voltar_inicio=self.voltar_inicio,
+            ),
+        )
+        self.botao_cliente.pack(pady=10)
 
     def voltar_inicio(self, frame):
         frame.destroy()
