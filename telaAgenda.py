@@ -2,6 +2,8 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import Pyro4
 import threading
+
+import Pyro4.errors
 from agenda import Agenda
 
 
@@ -10,6 +12,8 @@ class TelaAgenda:
         self.tela = tela
         self.menu = menu
         self.voltar_inicio = voltar_inicio
+        self.nome_agenda = None
+        self.ip_sn = None
 
         self.menu.destroy()
         self.tela.title("Cadastrar agenda")
@@ -19,8 +23,14 @@ class TelaAgenda:
         self.lbl_nome_agenda = tk.Label(self.frame_agenda, text="Nome da Agenda")
         self.lbl_nome_agenda.pack(pady=5)
 
-        self.entrada_nome_agenda = ttk.Entry(self.frame_agenda)
-        self.entrada_nome_agenda.pack(pady=5)
+        opcoes = ["", "agenda1", "agenda2", "agenda3"]
+
+        self.nome_agenda_selecionado = tk.StringVar(value=opcoes[0])
+
+        self.dropdown_nome_agenda = ttk.OptionMenu(
+            self.frame_agenda, self.nome_agenda_selecionado, *opcoes
+        )
+        self.dropdown_nome_agenda.pack(pady=15)
 
         self.lbl_texto_ip_agenda = tk.Label(self.frame_agenda, text="IP da Agenda:")
         self.lbl_texto_ip_agenda.pack(pady=5)
@@ -51,23 +61,35 @@ class TelaAgenda:
         )
         self.botao_voltar.pack(pady=5)
 
-    def iniciar_agenda(self, nome_agenda, ip_sn, ip_agenda):
+    def verifica_existencia_agenda(self, nome_agenda):
+        try:
+            ns = Pyro4.locateNS(host=self.ip_sn, port=9090)
+            ns.lookup(nome_agenda)
+            messagebox.showwarning("Aviso", f"Essa agenda já foi criada!")
+            return True
+        except Pyro4.errors.NamingError:
+            return False
+        except Exception as e:
+            messagebox.showerror("Erro", f"Erro ao localizar o servidor de nomes: {e}")
+            return True
+
+    def iniciar_agenda(self, nome_agenda, ip_agenda):
         self.instancia_sv_mensagens = Agenda()
         t_sv = threading.Thread(
             target=self.instancia_sv_mensagens.iniciar,
-            args=(nome_agenda, ip_sn, ip_agenda),
+            args=(nome_agenda, self.ip_sn, ip_agenda),
             daemon=True,
         )
         t_sv.start()
 
     def tela_agenda_iniciada(self):
         self.tela.title("Agenda iniciada")
-        ip_sn = self.entrada_ip_sn.get().strip()
+        self.ip_sn = self.entrada_ip_sn.get().strip()
         ip_agenda = self.entrada_ip_agenda.get().strip()
-        nome_agenda = self.entrada_nome_agenda.get()
-        try:
-            Pyro4.locateNS(host=ip_sn, port=9090)
-            self.iniciar_agenda(nome_agenda, ip_sn, ip_agenda)
+        nome_agenda = self.nome_agenda_selecionado.get()
+        if not self.verifica_existencia_agenda(nome_agenda):
+            print("Agenda criada com sucesso")
+            self.iniciar_agenda(nome_agenda, ip_agenda)
             self.frame_agenda.destroy()
 
             self.frame_agenda_iniciada = tk.Frame(self.tela)
@@ -87,5 +109,3 @@ class TelaAgenda:
                 self.frame_agenda_iniciada, text=f"Nome: {nome_agenda}"
             )
             self.lbl_nome_agenda.pack(pady=10)
-        except Exception as e:
-            messagebox.showerror("Erro", f"Erro ao localizar o servidor de nomes: {e}")
