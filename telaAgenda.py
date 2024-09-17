@@ -86,13 +86,15 @@ class TelaAgenda:
         
         self.ip_sn = self.entrada_ip_sn.get().strip()
         ip_agenda = self.entrada_ip_agenda.get().strip()
-        nome_agenda = self.nome_agenda_selecionado.get()
+        self.nome_agenda = self.nome_agenda_selecionado.get()
 
-        if not self.verifica_existencia_agenda(nome_agenda):
+        if not self.verifica_existencia_agenda(self.nome_agenda):
             self.tela.title("Agenda iniciada")
-            self.iniciar_agenda(nome_agenda, ip_agenda)
+            self.iniciar_agenda(self.nome_agenda, ip_agenda)
             self.frame_agenda.destroy()
-
+            self.tela.protocol(
+                name="WM_DELETE_WINDOW", func=self.fechar_janela
+            )
             self.frame_agenda_iniciada = tk.Frame(self.tela)
             self.frame_agenda_iniciada.pack()
 
@@ -107,12 +109,12 @@ class TelaAgenda:
             self.lbl_ip_agenda.pack(pady=10)
 
             self.lbl_nome_agenda = tk.Label(
-                self.frame_agenda_iniciada, text=f"Nome: {nome_agenda}"
+                self.frame_agenda_iniciada, text=f"Nome: {self.nome_agenda}"
             )
             self.lbl_nome_agenda.pack(pady=10)
 
             self.lbl_contatos = tk.Label(
-                self.frame_agenda_iniciada, text=f"Contatos da {nome_agenda}"
+                self.frame_agenda_iniciada, text=f"Contatos da {self.nome_agenda}"
             )
             self.lbl_contatos.pack(side=tk.TOP)
 
@@ -135,10 +137,37 @@ class TelaAgenda:
             scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
             self.lb_contatos.config(yscrollcommand=scrollbar.set)
 
+            self.frame_switch = tk.Frame(self.frame_agenda_iniciada)
+            self.frame_switch.pack()
+
+            self.statusSwitch = tk.BooleanVar()
+            self.statusSwitch.set(self.instancia_agenda.getStatus())
+
+            self.switch = ttk.Checkbutton(
+                self.frame_switch,
+                text= "Ativada" if self.instancia_agenda.getStatus() else "Desativada",
+                style="Switch.TCheckbutton",
+                command=self.atualizarSwitch,
+                variable=self.statusSwitch,
+            )
+            self.switch.pack()
+
             self.carregarContatosDaAgenda()
+
+    def atualizarSwitch(self):
+        self.instancia_agenda.mudarStatus()
+        self.statusSwitch.set(self.instancia_agenda.getStatus())
+        self.switch.config(text="Ativada" if self.instancia_agenda.getStatus() else "Desativada")
+
     def carregarContatosDaAgenda(self):
         self.frame_caixa_contatos.after(200, self.carregarContatosDaAgenda)
         if self.lb_contatos.size() != 0:
             self.lb_contatos.delete(0, tk.END)
         for usuario in self.instancia_agenda.retornarListaDeContatos():
             self.lb_contatos.insert(0, f"{usuario[0]} - {usuario[1]}")
+
+    def fechar_janela(self):
+        self.tela.destroy()
+        name_server = Pyro4.locateNS()
+
+        name_server.remove(self.nome_agenda)

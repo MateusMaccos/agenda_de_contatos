@@ -21,7 +21,9 @@ class Agenda:
         self.agendasConectadas = []
         self.ip_sn = None
 
-    # 192.168.1.11
+    def getStatus(self):
+        return self.estaOnline
+    
     def conectarAgendas(self):
         agendas = ["agenda1", "agenda2", "agenda3"]
         for agenda in agendas:
@@ -75,8 +77,9 @@ class Agenda:
 
     def atualizarNasOutrasAgendas(self):
         for agenda in self.agendasConectadas:
-            agenda.limparContatos()
-            agenda.atualizarContatosPorLista(self.retornarListaDeContatos())
+            if agenda.getStatus():
+                agenda.limparContatos()
+                agenda.atualizarContatosPorLista(self.retornarListaDeContatos())
     
     def atualizarContatosPorLista(self,lista):
         for contato in lista:
@@ -86,13 +89,12 @@ class Agenda:
         if self.estaOnline == True:
             self.estaOnline = False
         else:
+            self.estaOnline = True
             if len(self.agendasConectadas) != 0:
                 for agenda in self.agendasConectadas:
-                    if agenda.estaOnline:
+                    if agenda.getStatus():
                         self.contatos.clear()
-                        for contato in agenda.retornarListaDeContatos():
-                            contatoAtualizado = Contato(contato[0], contato[1])
-                            self.contatos.append(contatoAtualizado)
+                        self.atualizarContatosPorLista(agenda.retornarListaDeContatos())
 
     def iniciar(self, nomeAgenda, ipSN, ipAgenda):
         daemon = Pyro4.Daemon(host=ipAgenda)

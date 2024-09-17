@@ -180,16 +180,18 @@ class TelaCliente:
         else:
             return False
     def conectarNaAgenda(self):
-        agenda = "agenda1"
-        try:
-            sn = Pyro4.locateNS(host=self.ip_sn)
-            self.agenda = Pyro4.Proxy("PYRONAME:" + agenda + "@" + self.ip_sn + ":9090")
-            return True
-        except Pyro4.errors.NamingError:
-            messagebox.showerror("Erro", f"Não foi possível achar o servidor de nomes")
-        except Exception as e:
-            messagebox.showerror("Erro", f"Não foi possível conectar ao servidor:{e}")
+        agendas=["agenda1","agenda2","agenda3"]
+        for agenda in agendas:
+            try:
+                sn = Pyro4.locateNS(host=self.ip_sn)
+                self.agenda = Pyro4.Proxy("PYRONAME:" + agenda + "@" + self.ip_sn + ":9090")
+                return True
+            except Pyro4.errors.NamingError:
+                messagebox.showerror("Erro", f"Não foi possível achar o servidor de nomes")
+            except Exception as e:
+                messagebox.showerror("Erro", f"Não foi possível conectar ao servidor:{e}")
         return False
+    
     def iniciar(self):
         self.ip_sn = self.entrada_ip_sn.get().strip()
 
