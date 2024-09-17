@@ -83,12 +83,13 @@ class TelaAgenda:
         t_sv.start()
 
     def tela_agenda_iniciada(self):
-        self.tela.title("Agenda iniciada")
+        
         self.ip_sn = self.entrada_ip_sn.get().strip()
         ip_agenda = self.entrada_ip_agenda.get().strip()
         nome_agenda = self.nome_agenda_selecionado.get()
+
         if not self.verifica_existencia_agenda(nome_agenda):
-            print("Agenda criada com sucesso")
+            self.tela.title("Agenda iniciada")
             self.iniciar_agenda(nome_agenda, ip_agenda)
             self.frame_agenda.destroy()
 

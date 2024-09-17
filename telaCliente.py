@@ -2,6 +2,8 @@ import Pyro4
 import tkinter as tk
 from tkinter import ttk, messagebox
 
+import Pyro4.errors
+
 
 class TelaCliente:
     def __init__(self, tela, menu, voltar_inicio):
@@ -169,6 +171,7 @@ class TelaCliente:
                 self.contatosDaAgenda.append(contato)
 
         self.frame_caixa_usuarios.after(2000, self.atualizarContatos)
+
     def compararAgenda(self,agendaLocal,agendaConectada):
         agendaLocal.sort()
         agendaConectada.sort()
@@ -176,79 +179,86 @@ class TelaCliente:
             return True
         else:
             return False
+    def conectarNaAgenda(self):
+        agenda = "agenda1"
+        try:
+            sn = Pyro4.locateNS(host=self.ip_sn)
+            self.agenda = Pyro4.Proxy("PYRONAME:" + agenda + "@" + self.ip_sn + ":9090")
+            return True
+        except Pyro4.errors.NamingError:
+            messagebox.showerror("Erro", f"Não foi possível achar o servidor de nomes")
+        except Exception as e:
+            messagebox.showerror("Erro", f"Não foi possível conectar ao servidor:{e}")
+        return False
     def iniciar(self):
         self.ip_sn = self.entrada_ip_sn.get().strip()
 
-        agenda = "agenda1"
-        self.tela.title(f"Agenda de Contatos")
+        seConectou = self.conectarNaAgenda()
+        if seConectou:
+            self.criarInterface()
 
+    def criarInterface(self):
         self.frame_criar_cliente.destroy()
+        self.tela.title(f"Agenda de Contatos")
+        self.frame_cliente = tk.Frame()
+        self.frame_cliente.pack()
+        self.cabecalho = tk.Frame(self.frame_cliente)
+        self.cabecalho.pack()
 
-        try:
-            self.agenda = Pyro4.Proxy("PYRONAME:" + agenda + "@" + self.ip_sn + ":9090")
+        self.botao_adicionar = ttk.Button(
+            self.cabecalho,
+            text="Adicionar contato",
+            style="Accent.TButton",
+            command=self.telaAdicionarContato,
+        )
+        self.botao_adicionar.pack(pady=10, side=tk.LEFT)
 
-            self.frame_cliente = tk.Frame()
-            self.frame_cliente.pack()
-            self.cabecalho = tk.Frame(self.frame_cliente)
-            self.cabecalho.pack()
+        self.frame_apagar = tk.Frame(self.cabecalho)
+        self.frame_apagar.pack(side=tk.RIGHT)
 
-            self.botao_adicionar = ttk.Button(
-                self.cabecalho,
-                text="Adicionar contato",
-                style="Accent.TButton",
-                command=self.telaAdicionarContato,
-            )
-            self.botao_adicionar.pack(pady=10, side=tk.LEFT)
+        self.botao_adicionar = ttk.Button(
+            self.frame_apagar,
+            text="Apagar Contato",
+            command=self.removerContato,
+        )
+        self.botao_adicionar.pack(pady=10, side=tk.RIGHT)
 
-            self.frame_apagar = tk.Frame(self.cabecalho)
-            self.frame_apagar.pack(side=tk.RIGHT)
+        self.lbl_texto = tk.Label(self.cabecalho, text="Contatos")
+        self.lbl_texto.pack(pady=10, padx=50, side=tk.RIGHT)
 
-            self.botao_adicionar = ttk.Button(
-                self.frame_apagar,
-                text="Apagar Contato",
-                command=self.removerContato,
-            )
-            self.botao_adicionar.pack(pady=10, side=tk.RIGHT)
+        self.frame_contatos = tk.Frame(self.frame_cliente)
+        self.frame_contatos.pack()
 
-            self.lbl_texto = tk.Label(self.cabecalho, text="Contatos")
-            self.lbl_texto.pack(pady=10, padx=50, side=tk.RIGHT)
+        self.frame_caixa_usuarios = tk.Frame(self.frame_contatos)
+        self.frame_caixa_usuarios.pack(fill=tk.BOTH, expand=True)
 
-            self.frame_contatos = tk.Frame(self.frame_cliente)
-            self.frame_contatos.pack()
+        self.lb_usuarios = tk.Listbox(
+            self.frame_caixa_usuarios, width=50, height=10
+        )
+        self.lb_usuarios.pack(
+            side=tk.LEFT, fill=tk.BOTH, expand=True, padx=5, pady=5
+        )
+        for contato in self.agenda.retornarListaDeContatos():
+            self.lb_usuarios.insert(tk.END, contato[0])
+            self.contatosDaAgenda.append(contato)
+        self.atualizarContatos()
 
-            self.frame_caixa_usuarios = tk.Frame(self.frame_contatos)
-            self.frame_caixa_usuarios.pack(fill=tk.BOTH, expand=True)
+        # Adiciona a barra de rolagem se necessário
+        scrollbar = tk.Scrollbar(
+            self.frame_caixa_usuarios,
+            orient=tk.VERTICAL,
+            command=self.lb_usuarios.yview,
+        )
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.lb_usuarios.config(yscrollcommand=scrollbar.set)
 
-            self.lb_usuarios = tk.Listbox(
-                self.frame_caixa_usuarios, width=50, height=10
-            )
-            self.lb_usuarios.pack(
-                side=tk.LEFT, fill=tk.BOTH, expand=True, padx=5, pady=5
-            )
-            for contato in self.agenda.retornarListaDeContatos():
-                self.lb_usuarios.insert(tk.END, contato[0])
-                self.contatosDaAgenda.append(contato)
-            self.atualizarContatos()
+        frame_botao_atualizar = tk.Frame(self.frame_contatos)
+        frame_botao_atualizar.pack()
 
-            # Adiciona a barra de rolagem se necessário
-            scrollbar = tk.Scrollbar(
-                self.frame_caixa_usuarios,
-                orient=tk.VERTICAL,
-                command=self.lb_usuarios.yview,
-            )
-            scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-            self.lb_usuarios.config(yscrollcommand=scrollbar.set)
-
-            frame_botao_atualizar = tk.Frame(self.frame_contatos)
-            frame_botao_atualizar.pack()
-
-            self.botao_atualizar = ttk.Button(
-                frame_botao_atualizar,
-                text="Atualizar Contato",
-                style="Accent.TButton",
-                command=self.telaAtualizarContato,
-            )
-            self.botao_atualizar.pack(pady=10)
-
-        except Exception as e:
-            messagebox.showerror("Erro", f"Não foi possível conectar ao servidor:{e}")
+        self.botao_atualizar = ttk.Button(
+            frame_botao_atualizar,
+            text="Atualizar Contato",
+            style="Accent.TButton",
+            command=self.telaAtualizarContato,
+        )
+        self.botao_atualizar.pack(pady=10)
