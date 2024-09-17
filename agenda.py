@@ -1,22 +1,22 @@
 import Pyro4
 from contato import Contato
 
+
 @Pyro4.expose
 @Pyro4.behavior(instance_mode="single")
 class Agenda:
     def __init__(self):
         self.estaOnline = True
         self.contatos = [
-            Contato("Mateus","85996417275"),
-            Contato("Jorge","85996417275"),
-            Contato("Pedro","85996417275"),
-            Contato("Joao","85996417275"),
-            Contato("Picolo","85996417275"),
-            Contato("Heitor","85996417275"),
-            Contato("Guilherme","85996417275"),
-            Contato("Josias","85996417275"),
-            
-            ]
+            Contato("Mateus", "85996417275"),
+            Contato("Jorge", "85996417275"),
+            Contato("Pedro", "85996417275"),
+            Contato("Joao", "85996417275"),
+            Contato("Picolo", "85996417275"),
+            Contato("Heitor", "85996417275"),
+            Contato("Guilherme", "85996417275"),
+            Contato("Josias", "85996417275"),
+        ]
         self.nome = None
         self.agendasConectadas = []
         self.ip_sn = None
@@ -37,28 +37,33 @@ class Agenda:
     def retornarListaDeContatos(self):
         listaDeStrings = []
         for contato in self.contatos:
-            listaDeStrings.append([contato.nome,contato.telefone])
+            listaDeStrings.append([contato.nome, contato.telefone])
         return listaDeStrings
 
+    def adicionarContato(self, dadosContato):
+        print(dadosContato[0])
+        self.contatos.append(Contato(dadosContato[0], dadosContato[1]))
 
-    def adicionarContato(self, contato):
-        self.contatos.append(contato)
-
-    def removerContato(self, contato):
-        self.contatos.remove(contato)
+    def removerContato(self, nomeContato):
+        for contato in self.contatos:
+            if contato.nome == nomeContato:
+                self.contatos.remove(contato)
 
     def consultarContato(self, nomeContato):
         for contato in self.contatos:
             if contato.nome == nomeContato:
-                return contato
-            
-    def atualizarContato(self,nomeContato,dadosAtualizados):
+                return [contato.nome, contato.telefone]
+
+    def atualizarContato(self, nomeContato, dadosAtualizados):
         for contato in self.contatos:
             if contato.nome == nomeContato:
-                contato.alterarNome(dadosAtualizados.nome)
-                contato.alterarTelefone(dadosAtualizados.telefone)
+                print(f"Contato antes: {contato.nome} , {contato.telefone}")
+                contato.alterarNome(dadosAtualizados[0])
+                contato.alterarTelefone(dadosAtualizados[1])
+                print(f"Contato depois: {contato.nome} , {contato.telefone}")
+
     def mudarStatus(self):
-        if self.estaOnline==True:
+        if self.estaOnline == True:
             self.estaOnline = False
         else:
             if len(self.agendasConectadas) != 0:
@@ -66,9 +71,9 @@ class Agenda:
                     if agenda.estaOnline:
                         self.contatos.clear()
                         for contato in agenda.retornarListaDeContatos():
-                            contatoAtualizado= Contato(contato[0],contato[1])
+                            contatoAtualizado = Contato(contato[0], contato[1])
                             self.contatos.append(contatoAtualizado)
-                            
+
     def iniciar(self, nomeAgenda, ipSN, ipAgenda):
         daemon = Pyro4.Daemon(host=ipAgenda)
         self.nome = nomeAgenda

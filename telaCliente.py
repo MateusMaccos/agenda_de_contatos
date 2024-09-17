@@ -1,13 +1,15 @@
 import Pyro4
 import tkinter as tk
-from tkinter import ttk,messagebox
+from tkinter import ttk, messagebox
+
+
 class TelaCliente:
     def __init__(self, tela, menu, voltar_inicio):
         self.tela = tela
         self.menu = menu
         self.voltar_inicio = voltar_inicio
         self.ip_sn = None
-        
+
         self.menu.destroy()
         self.tela.title("Criar Cliente")
         self.frame_criar_cliente = tk.Frame(self.tela)
@@ -36,18 +38,145 @@ class TelaCliente:
         )
         self.botao_voltar.pack(pady=5)
 
+    def telaAdicionarContato(self):
+        self.tela_cadastro = tk.Tk()
+        self.tela_cadastro.title("Adicionar Contato")
+        self.tela_cadastro.geometry("500x300")
+        self.tela_cadastro.tk.call("source", "azure.tcl")
+        self.tela_cadastro.tk.call("set_theme", "dark")
+
+        self.frame_cadastro = tk.Frame(self.tela_cadastro)
+        self.frame_cadastro.pack()
+
+        self.lbl_texto_nome = tk.Label(self.frame_cadastro, text="Nome do Contato")
+        self.lbl_texto_nome.pack(pady=5)
+
+        self.entrada_nome_contato = ttk.Entry(self.frame_cadastro)
+        self.entrada_nome_contato.pack(pady=5, padx=10)
+
+        self.lbl_texto_telefone = tk.Label(
+            self.frame_cadastro, text="Telefone do Contato"
+        )
+        self.lbl_texto_telefone.pack(pady=5)
+
+        self.entrada_telefone_contato = ttk.Entry(self.frame_cadastro)
+        self.entrada_telefone_contato.pack(pady=5, padx=10)
+
+        self.botao_adicionar = ttk.Button(
+            self.frame_cadastro,
+            text="Adicionar contato",
+            style="Accent.TButton",
+            command=self.adicionarContato,
+        )
+        self.botao_adicionar.pack(pady=10)
+
+    def contatoEstaNaAgenda(self, nomeContato):
+        for contato in self.agenda.retornarListaDeContatos():
+            if nomeContato == contato[0]:
+                return True
+        return False
+
+    def adicionarContato(self):
+        nome_contato = self.entrada_nome_contato.get()
+        telefone_contato = self.entrada_telefone_contato.get()
+        if self.contatoEstaNaAgenda(nomeContato=nome_contato):
+            messagebox.showwarning("Atenção", "Esse contato já existe na agenda!")
+        else:
+            try:
+                self.entrada_nome_contato.delete(0, tk.END)
+                self.entrada_telefone_contato.delete(0, tk.END)
+                self.agenda.adicionarContato([nome_contato, telefone_contato])
+                self.lb_usuarios.insert(tk.END, nome_contato)
+            except:
+                messagebox.showerror(
+                    "Erro", "Não foi possível adicionar esse contato: {e}"
+                )
+
+    def telaAtualizarContato(self):
+        try:
+            selecao = self.lb_usuarios.curselection()[0]
+            contatoSelecionado = self.lb_usuarios.get(selecao)
+
+            self.tela_atualizacao = tk.Tk()
+            self.tela_atualizacao.title("Atualizar Contato")
+            self.tela_atualizacao.geometry("500x300")
+            self.tela_atualizacao.tk.call("source", "azure.tcl")
+            self.tela_atualizacao.tk.call("set_theme", "dark")
+
+            self.frame_cadastro = tk.Frame(self.tela_atualizacao)
+            self.frame_cadastro.pack()
+
+            self.lbl_texto_nome = tk.Label(self.frame_cadastro, text="Nome do Contato")
+            self.lbl_texto_nome.pack(pady=5)
+
+            self.entrada_nome_contato = ttk.Entry(self.frame_cadastro)
+            self.entrada_nome_contato.insert(0, contatoSelecionado)
+            self.entrada_nome_contato.pack(pady=5, padx=10)
+
+            self.lbl_texto_telefone = tk.Label(
+                self.frame_cadastro, text="Telefone do Contato"
+            )
+            self.lbl_texto_telefone.pack(pady=5)
+
+            self.entrada_telefone_contato = ttk.Entry(self.frame_cadastro)
+            telefone = self.agenda.consultarContato(contatoSelecionado)[1]
+            self.entrada_telefone_contato.insert(0, telefone)
+            self.entrada_telefone_contato.pack(pady=5, padx=10)
+
+            self.botao_adicionar = ttk.Button(
+                self.frame_cadastro,
+                text="Atualizar contato",
+                style="Accent.TButton",
+                command=lambda: self.atualizarContato(
+                    contatoSelecionado,
+                    [
+                        self.entrada_nome_contato.get(),
+                        self.entrada_telefone_contato.get(),
+                    ],
+                ),
+            )
+            self.botao_adicionar.pack(pady=10)
+        except IndexError:
+            messagebox.showwarning("Atenção", "Escolha um contato!")
+        except Exception as e:
+            messagebox.showerror("Erro", f"{e}")
+
+    def atualizarContato(self, contatoSelecionado, dadosAtualizados):
+        self.agenda.atualizarContato(contatoSelecionado, dadosAtualizados)
+        messagebox.showinfo("Atualização de contato", "O contato foi atualizado!")
+        self.tela_atualizacao.destroy()
+
+    def removerContato(self):
+        try:
+            selecao = self.lb_usuarios.curselection()[0]
+            contatoSelecionado = self.lb_usuarios.get(selecao)
+            self.agenda.removerContato(contatoSelecionado)
+            self.lb_usuarios.delete(tk.ANCHOR)
+        except ValueError:
+            messagebox.showerror("Error", "O contato não está na lista!")
+        except IndexError:
+            messagebox.showwarning("Atenção", "Escolha um contato!")
+        except Exception as e:
+            messagebox.showerror("Erro", f"Não foi possível apagar esse contato! {e}")
+
+    def atualizarContatos(self):
+        if not self.lb_usuarios.curselection():
+            self.lb_usuarios.delete(0, tk.END)
+            for contato in self.agenda.retornarListaDeContatos():
+                self.lb_usuarios.insert(tk.END, contato[0])
+
+        self.frame_caixa_usuarios.after(2000, self.atualizarContatos)
+
     def iniciar(self):
         self.ip_sn = self.entrada_ip_sn.get()
 
-        agenda="agenda1"
+        agenda = "agenda1"
         self.tela.title(f"Agenda de Contatos")
 
         self.frame_criar_cliente.destroy()
 
         try:
-            self.agenda = Pyro4.Proxy(
-                "PYRONAME:" + agenda + "@" + self.ip_sn + ":9090"
-            )
+            self.agenda = Pyro4.Proxy("PYRONAME:" + agenda + "@" + self.ip_sn + ":9090")
 
             self.frame_cliente = tk.Frame()
             self.frame_cliente.pack()
@@ -78,28 +207,37 @@ class TelaCliente:
             self.frame_contatos = tk.Frame(self.frame_cliente)
             self.frame_contatos.pack()
 
-            frame_caixa_usuarios = tk.Frame(self.frame_contatos)
-            frame_caixa_usuarios.pack(fill=tk.BOTH, expand=True)
+            self.frame_caixa_usuarios = tk.Frame(self.frame_contatos)
+            self.frame_caixa_usuarios.pack(fill=tk.BOTH, expand=True)
 
-            self.lb_usuarios = tk.Listbox(frame_caixa_usuarios, width=50, height=10)
+            self.lb_usuarios = tk.Listbox(
+                self.frame_caixa_usuarios, width=50, height=10
+            )
             self.lb_usuarios.pack(
                 side=tk.LEFT, fill=tk.BOTH, expand=True, padx=5, pady=5
             )
 
-            for contato in self.agenda.retornarListaDeContatos():
-                self.lb_usuarios.insert(0, contato[0])
-            
+            self.atualizarContatos()
+
             # Adiciona a barra de rolagem se necessário
             scrollbar = tk.Scrollbar(
-                frame_caixa_usuarios, orient=tk.VERTICAL, command=self.lb_usuarios.yview
+                self.frame_caixa_usuarios,
+                orient=tk.VERTICAL,
+                command=self.lb_usuarios.yview,
             )
             scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
             self.lb_usuarios.config(yscrollcommand=scrollbar.set)
 
+            frame_botao_atualizar = tk.Frame(self.frame_contatos)
+            frame_botao_atualizar.pack()
+
+            self.botao_atualizar = ttk.Button(
+                frame_botao_atualizar,
+                text="Atualizar Contato",
+                style="Accent.TButton",
+                command=self.telaAtualizarContato,
+            )
+            self.botao_atualizar.pack(pady=10)
+
         except Exception as e:
             messagebox.showerror("Erro", f"Não foi possível conectar ao servidor:{e}")
-
-    def telaAdicionarContato(self):
-        pass
-    def removerContato(self):
-        pass
