@@ -9,6 +9,7 @@ class TelaCliente:
         self.menu = menu
         self.voltar_inicio = voltar_inicio
         self.ip_sn = None
+        self.contatosDaAgenda = []
 
         self.menu.destroy()
         self.tela.title("Criar Cliente")
@@ -160,13 +161,21 @@ class TelaCliente:
             messagebox.showerror("Erro", f"Não foi possível apagar esse contato! {e}")
 
     def atualizarContatos(self):
-        if not self.lb_usuarios.curselection():
+        if not self.compararAgenda(self.contatosDaAgenda,self.agenda.retornarListaDeContatos()):
             self.lb_usuarios.delete(0, tk.END)
+            self.contatosDaAgenda.clear()
             for contato in self.agenda.retornarListaDeContatos():
                 self.lb_usuarios.insert(tk.END, contato[0])
+                self.contatosDaAgenda.append(contato)
 
         self.frame_caixa_usuarios.after(2000, self.atualizarContatos)
-
+    def compararAgenda(self,agendaLocal,agendaConectada):
+        agendaLocal.sort()
+        agendaConectada.sort()
+        if(agendaLocal==agendaConectada):
+            return True
+        else:
+            return False
     def iniciar(self):
         self.ip_sn = self.entrada_ip_sn.get()
 
@@ -216,7 +225,9 @@ class TelaCliente:
             self.lb_usuarios.pack(
                 side=tk.LEFT, fill=tk.BOTH, expand=True, padx=5, pady=5
             )
-
+            for contato in self.agenda.retornarListaDeContatos():
+                self.lb_usuarios.insert(tk.END, contato[0])
+                self.contatosDaAgenda.append(contato)
             self.atualizarContatos()
 
             # Adiciona a barra de rolagem se necessário
