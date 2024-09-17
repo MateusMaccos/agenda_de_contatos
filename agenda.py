@@ -50,11 +50,16 @@ class Agenda:
 
     def adicionarContato(self, dadosContato):
         self.contatos.append(Contato(dadosContato[0], dadosContato[1]))
+        self.atualizarNasOutrasAgendas()
+    
+    def limparContatos(self):
+        self.contatos.clear()
 
     def removerContato(self, nomeContato):
         for contato in self.contatos:
             if contato.nome == nomeContato:
                 self.contatos.remove(contato)
+                self.atualizarNasOutrasAgendas()
 
     def consultarContato(self, nomeContato):
         for contato in self.contatos:
@@ -66,6 +71,16 @@ class Agenda:
             if contato.nome == nomeContato:
                 contato.alterarNome(dadosAtualizados[0])
                 contato.alterarTelefone(dadosAtualizados[1])
+                self.atualizarNasOutrasAgendas()
+
+    def atualizarNasOutrasAgendas(self):
+        for agenda in self.agendasConectadas:
+            agenda.limparContatos()
+            agenda.atualizarContatosPorLista(self.retornarListaDeContatos())
+    
+    def atualizarContatosPorLista(self,lista):
+        for contato in lista:
+            self.contatos.append(Contato(contato[0],contato[1]))
 
     def mudarStatus(self):
         if self.estaOnline == True:
