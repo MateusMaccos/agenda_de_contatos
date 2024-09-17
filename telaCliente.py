@@ -78,8 +78,8 @@ class TelaCliente:
         return False
 
     def adicionarContato(self):
-        nome_contato = self.entrada_nome_contato.get()
-        telefone_contato = self.entrada_telefone_contato.get()
+        nome_contato = self.entrada_nome_contato.get().strip()
+        telefone_contato = self.entrada_telefone_contato.get().strip()
         if self.contatoEstaNaAgenda(nomeContato=nome_contato):
             messagebox.showwarning("Atenção", "Esse contato já existe na agenda!")
         else:
@@ -177,7 +177,7 @@ class TelaCliente:
         else:
             return False
     def iniciar(self):
-        self.ip_sn = self.entrada_ip_sn.get()
+        self.ip_sn = self.entrada_ip_sn.get().strip()
 
         agenda = "agenda1"
         self.tela.title(f"Agenda de Contatos")
