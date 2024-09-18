@@ -1,7 +1,7 @@
 import Pyro4
 import tkinter as tk
 from tkinter import ttk, messagebox
-
+from constantes import agendas
 import Pyro4.errors
 
 
@@ -163,7 +163,9 @@ class TelaCliente:
             messagebox.showerror("Erro", f"Não foi possível apagar esse contato! {e}")
 
     def atualizarContatos(self):
-        if not self.compararAgenda(self.contatosDaAgenda,self.agenda.retornarListaDeContatos()):
+        if not self.compararAgenda(
+            self.contatosDaAgenda, self.agenda.retornarListaDeContatos()
+        ):
             self.lb_usuarios.delete(0, tk.END)
             self.contatosDaAgenda.clear()
             for contato in self.agenda.retornarListaDeContatos():
@@ -172,35 +174,58 @@ class TelaCliente:
 
         self.frame_caixa_usuarios.after(2000, self.atualizarContatos)
 
-    def compararAgenda(self,agendaLocal,agendaConectada):
+    def compararAgenda(self, agendaLocal, agendaConectada):
         agendaLocal.sort()
         agendaConectada.sort()
-        if(agendaLocal==agendaConectada):
+        if agendaLocal == agendaConectada:
             return True
         else:
             return False
-    def conectarNaAgenda(self):
-        agendas=["agenda1","agenda2","agenda3"]
-        for agenda in agendas:
-            try:
-                sn = Pyro4.locateNS(host=self.ip_sn)
-                self.agenda = Pyro4.Proxy("PYRONAME:" + agenda + "@" + self.ip_sn + ":9090")
-                return True
-            except Pyro4.errors.NamingError:
-                messagebox.showerror("Erro", f"Não foi possível achar o servidor de nomes")
-            except Exception as e:
-                messagebox.showerror("Erro", f"Não foi possível conectar ao servidor:{e}")
-        return False
-    
+
+    def conectarAoServidorDeNomes(self):
+        try:
+            self.sn = Pyro4.locateNS(host=self.ip_sn)
+            return True
+        except Pyro4.errors.NamingError:
+            messagebox.showerror("Erro", f"Não foi possível achar o servidor de nomes")
+            return False
+
+    def conectarNaAgenda(self, agenda):
+        try:
+            return Pyro4.Proxy("PYRONAME:" + agenda + "@" + self.ip_sn + ":9090")
+        except Exception as e:
+            messagebox.showerror("Erro", f"Não foi possível conectar a agenda:{e}")
+
     def iniciar(self):
         self.ip_sn = self.entrada_ip_sn.get().strip()
+        seConectou = self.conectarAoServidorDeNomes()
+        for agenda in agendas:
+            instanciaDaAgenda = self.conectarNaAgenda(agenda)
+            if seConectou:
+                if instanciaDaAgenda.getStatus():
+                    self.agenda = instanciaDaAgenda
+                    print(f"Agenda atual: {agenda}")
+                    self.criarInterface(self.frame_criar_cliente)
+                    return
+        messagebox.showwarning("Aviso", "Nenhuma agenda online!")
 
-        seConectou = self.conectarNaAgenda()
-        if seConectou:
-            self.criarInterface()
+    def verificandoAgendaOnline(self):
+        if not self.agenda.getStatus():
+            for agenda in agendas:
+                instanciaDaAgenda = self.conectarNaAgenda(agenda)
+                try:
+                    if instanciaDaAgenda.getStatus():
+                        self.agenda = instanciaDaAgenda
+                        print(f"Agenda atual: {agenda}")
+                        break
+                except:
+                    continue
+            if instanciaDaAgenda != self.agenda:
+                messagebox.showwarning("Aviso", "Nenhuma agenda online!")
+        self.frame_caixa_usuarios.after(1000, self.verificandoAgendaOnline)
 
-    def criarInterface(self):
-        self.frame_criar_cliente.destroy()
+    def criarInterface(self, frameAnterior):
+        frameAnterior.destroy()
         self.tela.title(f"Agenda de Contatos")
         self.frame_cliente = tk.Frame()
         self.frame_cliente.pack()
@@ -234,16 +259,15 @@ class TelaCliente:
         self.frame_caixa_usuarios = tk.Frame(self.frame_contatos)
         self.frame_caixa_usuarios.pack(fill=tk.BOTH, expand=True)
 
-        self.lb_usuarios = tk.Listbox(
-            self.frame_caixa_usuarios, width=50, height=10
-        )
-        self.lb_usuarios.pack(
-            side=tk.LEFT, fill=tk.BOTH, expand=True, padx=5, pady=5
-        )
+        self.lb_usuarios = tk.Listbox(self.frame_caixa_usuarios, width=50, height=10)
+        self.lb_usuarios.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=5, pady=5)
+
         for contato in self.agenda.retornarListaDeContatos():
             self.lb_usuarios.insert(tk.END, contato[0])
             self.contatosDaAgenda.append(contato)
+
         self.atualizarContatos()
+        self.verificandoAgendaOnline()
 
         # Adiciona a barra de rolagem se necessário
         scrollbar = tk.Scrollbar(

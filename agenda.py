@@ -1,5 +1,6 @@
 import Pyro4
 from contato import Contato
+from constantes import agendas
 
 
 @Pyro4.expose
@@ -23,9 +24,8 @@ class Agenda:
 
     def getStatus(self):
         return self.estaOnline
-    
+
     def conectarAgendas(self):
-        agendas = ["agenda1", "agenda2", "agenda3"]
         for agenda in agendas:
             if agenda != self.nome:
                 try:
@@ -34,11 +34,15 @@ class Agenda:
                     self.agendasConectadas.append(instanciaOutraAgenda)
                     print(f"Registrou pelo servidor de nomes: {agenda}")
                     instanciaOutraAgenda.adicionarOutraAgenda(self.nome)
+                    self.limparContatos()
+                    self.atualizarContatosPorLista(
+                        instanciaOutraAgenda.retornarListaDeContatos()
+                    )
                 except Exception as e:
                     print(e)
-        print(len(self.agendasConectadas))
+                    continue
 
-    def adicionarOutraAgenda(self,outraAgenda):
+    def adicionarOutraAgenda(self, outraAgenda):
         print(f"Registrou por outra agenda: {outraAgenda}")
         destino_uri = self.ns.lookup(outraAgenda)
         instanciaOutraAgenda = Pyro4.Proxy(destino_uri)
@@ -53,7 +57,7 @@ class Agenda:
     def adicionarContato(self, dadosContato):
         self.contatos.append(Contato(dadosContato[0], dadosContato[1]))
         self.atualizarNasOutrasAgendas()
-    
+
     def limparContatos(self):
         self.contatos.clear()
 
@@ -80,10 +84,10 @@ class Agenda:
             if agenda.getStatus():
                 agenda.limparContatos()
                 agenda.atualizarContatosPorLista(self.retornarListaDeContatos())
-    
-    def atualizarContatosPorLista(self,lista):
+
+    def atualizarContatosPorLista(self, lista):
         for contato in lista:
-            self.contatos.append(Contato(contato[0],contato[1]))
+            self.contatos.append(Contato(contato[0], contato[1]))
 
     def mudarStatus(self):
         if self.estaOnline == True:
