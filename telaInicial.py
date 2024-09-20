@@ -4,11 +4,13 @@ from telaServidorDeNomes import TelaServidorDeNomes
 from telaAgenda import TelaAgenda
 from telaCliente import TelaCliente
 
+
 class TelaInicial:
     def __init__(self):
         self.tela = tk.Tk()
         self.tela.title("Menu Principal")
         self.tela.geometry("500x400")
+        self.tela.iconbitmap("images/icone.ico")
         self.tela.tk.call("source", "azure.tcl")
         self.tela.tk.call("set_theme", "dark")
         self.menu()

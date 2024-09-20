@@ -100,6 +100,9 @@ class Agenda:
                         self.contatos.clear()
                         self.atualizarContatosPorLista(agenda.retornarListaDeContatos())
 
+    def getNome(self):
+        return self.nome
+
     def iniciar(self, nomeAgenda, ipSN, ipAgenda):
         daemon = Pyro4.Daemon(host=ipAgenda)
         self.nome = nomeAgenda

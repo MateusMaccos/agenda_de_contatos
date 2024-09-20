@@ -83,7 +83,7 @@ class TelaAgenda:
         t_sv.start()
 
     def tela_agenda_iniciada(self):
-        
+
         self.ip_sn = self.entrada_ip_sn.get().strip()
         ip_agenda = self.entrada_ip_agenda.get().strip()
         self.nome_agenda = self.nome_agenda_selecionado.get()
@@ -92,30 +92,24 @@ class TelaAgenda:
             self.tela.title("Agenda iniciada")
             self.iniciar_agenda(self.nome_agenda, ip_agenda)
             self.frame_agenda.destroy()
-            self.tela.protocol(
-                name="WM_DELETE_WINDOW", func=self.fechar_janela
-            )
+            self.tela.protocol(name="WM_DELETE_WINDOW", func=self.fechar_janela)
             self.frame_agenda_iniciada = tk.Frame(self.tela)
             self.frame_agenda_iniciada.pack()
 
-            self.lbl_texto = tk.Label(
-                self.frame_agenda_iniciada, text="Agenda iniciada"
+            self.info = ttk.LabelFrame(
+                self.frame_agenda_iniciada,
+                text="Informações",
+                padding=(10, 10),
             )
-            self.lbl_texto.pack(pady=10)
+            self.info.pack(pady=10)
 
-            self.lbl_ip_agenda = tk.Label(
-                self.frame_agenda_iniciada, text=f"IP: {ip_agenda}"
-            )
+            self.lbl_ip_agenda = tk.Label(self.info, text=f"IP: {ip_agenda}")
             self.lbl_ip_agenda.pack(pady=10)
 
-            self.lbl_nome_agenda = tk.Label(
-                self.frame_agenda_iniciada, text=f"Nome: {self.nome_agenda}"
-            )
+            self.lbl_nome_agenda = tk.Label(self.info, text=f"Nome: {self.nome_agenda}")
             self.lbl_nome_agenda.pack(pady=10)
 
-            self.lbl_contatos = tk.Label(
-                self.frame_agenda_iniciada, text=f"Contatos da {self.nome_agenda}"
-            )
+            self.lbl_contatos = tk.Label(self.frame_agenda_iniciada, text="Contatos")
             self.lbl_contatos.pack(side=tk.TOP)
 
             self.frame_caixa_contatos = tk.Frame(self.frame_agenda_iniciada)
@@ -125,7 +119,7 @@ class TelaAgenda:
                 self.frame_caixa_contatos, width=50, height=10
             )
             self.lb_contatos.pack(
-                side=tk.LEFT, fill=tk.BOTH, expand=True, padx=5, pady=5
+                side=tk.LEFT, fill=tk.BOTH, expand=True, padx=10, pady=10
             )
 
             # Adiciona a barra de rolagem se necessário
@@ -145,7 +139,7 @@ class TelaAgenda:
 
             self.switch = ttk.Checkbutton(
                 self.frame_switch,
-                text= "Ativada" if self.instancia_agenda.getStatus() else "Desativada",
+                text="Ativada" if self.instancia_agenda.getStatus() else "Desativada",
                 style="Switch.TCheckbutton",
                 command=self.atualizarSwitch,
                 variable=self.statusSwitch,
@@ -157,7 +151,9 @@ class TelaAgenda:
     def atualizarSwitch(self):
         self.instancia_agenda.mudarStatus()
         self.statusSwitch.set(self.instancia_agenda.getStatus())
-        self.switch.config(text="Ativada" if self.instancia_agenda.getStatus() else "Desativada")
+        self.switch.config(
+            text="Ativada" if self.instancia_agenda.getStatus() else "Desativada"
+        )
 
     def carregarContatosDaAgenda(self):
         self.frame_caixa_contatos.after(200, self.carregarContatosDaAgenda)

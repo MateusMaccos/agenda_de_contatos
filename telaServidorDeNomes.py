@@ -58,9 +58,15 @@ class TelaServidorDeNomes:
         self.frame_sn_iniciado = tk.Frame()
         self.frame_sn_iniciado.pack()
 
-        self.lbl_texto = tk.Label(
-            self.frame_sn_iniciado, text="Servidor de nomes iniciado"
+        self.info = ttk.LabelFrame(
+            self.frame_sn_iniciado,
+            text="Servidor de nomes iniciado",
+            padding=(10, 10),
         )
+        self.info.pack(pady=10)
+
+        self.lbl_texto = tk.Label(self.info, text="Dados")
         self.lbl_texto.pack(pady=10)
-        self.lbl_ip = tk.Label(self.frame_sn_iniciado, text=ip_sn)
+
+        self.lbl_ip = tk.Label(self.info, text=f"IP: {ip_sn}")
         self.lbl_ip.pack(pady=10)

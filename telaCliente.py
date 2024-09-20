@@ -45,6 +45,7 @@ class TelaCliente:
         self.tela_cadastro = tk.Tk()
         self.tela_cadastro.title("Adicionar Contato")
         self.tela_cadastro.geometry("500x300")
+        self.tela_cadastro.iconbitmap("images/icon.ico")
         self.tela_cadastro.tk.call("source", "azure.tcl")
         self.tela_cadastro.tk.call("set_theme", "dark")
 
@@ -103,6 +104,7 @@ class TelaCliente:
             self.tela_atualizacao = tk.Tk()
             self.tela_atualizacao.title("Atualizar Contato")
             self.tela_atualizacao.geometry("500x300")
+            self.tela_atualizacao.iconbitmap("images/icon.ico")
             self.tela_atualizacao.tk.call("source", "azure.tcl")
             self.tela_atualizacao.tk.call("set_theme", "dark")
 
@@ -145,6 +147,10 @@ class TelaCliente:
             messagebox.showerror("Erro", f"{e}")
 
     def atualizarContato(self, contatoSelecionado, dadosAtualizados):
+        for contato in self.agenda.retornarListaDeContatos():
+            if contato[0] == dadosAtualizados[0]:
+                messagebox.showwarning("Aviso", "Um contato com esse nome já existe!")
+                return
         self.agenda.atualizarContato(contatoSelecionado, dadosAtualizados)
         messagebox.showinfo("Atualização de contato", "O contato foi atualizado!")
         self.tela_atualizacao.destroy()
@@ -163,16 +169,23 @@ class TelaCliente:
             messagebox.showerror("Erro", f"Não foi possível apagar esse contato! {e}")
 
     def atualizarContatos(self):
-        if not self.compararAgenda(
-            self.contatosDaAgenda, self.agenda.retornarListaDeContatos()
+        pesquisa = self.entrada_pesquisa.get()
+        self.lbl_agenda_atual.config(text=f"Agenda conectada: {self.agenda.getNome()}")
+        if (
+            not self.compararAgenda(
+                self.contatosDaAgenda, self.agenda.retornarListaDeContatos()
+            )
+            or pesquisa
         ):
             self.lb_usuarios.delete(0, tk.END)
             self.contatosDaAgenda.clear()
             for contato in self.agenda.retornarListaDeContatos():
-                self.lb_usuarios.insert(tk.END, contato[0])
-                self.contatosDaAgenda.append(contato)
+                nome_contato = str(contato[0]).lower()
+                if not pesquisa or pesquisa.lower() in nome_contato:
+                    self.lb_usuarios.insert(tk.END, contato[0])
+                    self.contatosDaAgenda.append(contato)
 
-        self.frame_caixa_usuarios.after(2000, self.atualizarContatos)
+        self.frame_caixa_usuarios.after(1000, self.atualizarContatos)
 
     def compararAgenda(self, agendaLocal, agendaConectada):
         agendaLocal.sort()
@@ -227,6 +240,7 @@ class TelaCliente:
     def criarInterface(self, frameAnterior):
         frameAnterior.destroy()
         self.tela.title(f"Agenda de Contatos")
+        self.tela.geometry("500x500")
         self.frame_cliente = tk.Frame()
         self.frame_cliente.pack()
         self.cabecalho = tk.Frame(self.frame_cliente)
@@ -266,9 +280,6 @@ class TelaCliente:
             self.lb_usuarios.insert(tk.END, contato[0])
             self.contatosDaAgenda.append(contato)
 
-        self.atualizarContatos()
-        self.verificandoAgendaOnline()
-
         # Adiciona a barra de rolagem se necessário
         scrollbar = tk.Scrollbar(
             self.frame_caixa_usuarios,
@@ -278,13 +289,29 @@ class TelaCliente:
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         self.lb_usuarios.config(yscrollcommand=scrollbar.set)
 
-        frame_botao_atualizar = tk.Frame(self.frame_contatos)
-        frame_botao_atualizar.pack()
+        frame_botoes = tk.Frame(self.frame_contatos)
+        frame_botoes.pack()
 
         self.botao_atualizar = ttk.Button(
-            frame_botao_atualizar,
-            text="Atualizar Contato",
+            frame_botoes,
+            text="Consultar Contato",
             style="Accent.TButton",
             command=self.telaAtualizarContato,
         )
         self.botao_atualizar.pack(pady=10)
+
+        self.pesquisa = ttk.LabelFrame(
+            self.frame_cliente, text="Pesquise por um contato", padding=(10, 10)
+        )
+        self.pesquisa.pack(pady=5)
+
+        self.entrada_pesquisa = ttk.Entry(self.pesquisa)
+        self.entrada_pesquisa.pack(pady=5)
+
+        self.lbl_agenda_atual = tk.Label(
+            self.frame_cliente, text=f"Agenda conectada: {self.agenda.getNome()}"
+        )
+        self.lbl_agenda_atual.pack(pady=5)
+
+        self.atualizarContatos()
+        self.verificandoAgendaOnline()
