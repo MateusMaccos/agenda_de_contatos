@@ -45,7 +45,7 @@ class TelaCliente:
         self.tela_cadastro = tk.Tk()
         self.tela_cadastro.title("Adicionar Contato")
         self.tela_cadastro.geometry("500x300")
-        self.tela_cadastro.iconbitmap("images/icon.ico")
+        self.tela_cadastro.iconbitmap("images/icone.ico")
         self.tela_cadastro.tk.call("source", "azure.tcl")
         self.tela_cadastro.tk.call("set_theme", "dark")
 
@@ -104,7 +104,7 @@ class TelaCliente:
             self.tela_atualizacao = tk.Tk()
             self.tela_atualizacao.title("Atualizar Contato")
             self.tela_atualizacao.geometry("500x300")
-            self.tela_atualizacao.iconbitmap("images/icon.ico")
+            self.tela_atualizacao.iconbitmap("images/icone.ico")
             self.tela_atualizacao.tk.call("source", "azure.tcl")
             self.tela_atualizacao.tk.call("set_theme", "dark")
 
@@ -209,27 +209,32 @@ class TelaCliente:
         except Exception as e:
             messagebox.showerror("Erro", f"Não foi possível conectar a agenda:{e}")
 
+    def verificarStatusAgenda(self, instanciaDaAgenda):
+        try:
+            status = instanciaDaAgenda.getStatus()
+            return status
+        except:
+            return False
+
     def iniciar(self):
         self.ip_sn = self.entrada_ip_sn.get().strip()
         seConectou = self.conectarAoServidorDeNomes()
         for agenda in agendas:
             instanciaDaAgenda = self.conectarNaAgenda(agenda)
             if seConectou:
-                if instanciaDaAgenda.getStatus():
+                if self.verificarStatusAgenda(instanciaDaAgenda):
                     self.agenda = instanciaDaAgenda
-                    print(f"Agenda atual: {agenda}")
                     self.criarInterface(self.frame_criar_cliente)
                     return
         messagebox.showwarning("Aviso", "Nenhuma agenda online!")
 
     def verificandoAgendaOnline(self):
-        if not self.agenda.getStatus():
+        if not self.verificarStatusAgenda(self.agenda):
             for agenda in agendas:
-                instanciaDaAgenda = self.conectarNaAgenda(agenda)
                 try:
-                    if instanciaDaAgenda.getStatus():
+                    instanciaDaAgenda = self.conectarNaAgenda(agenda)
+                    if self.verificarStatusAgenda(instanciaDaAgenda):
                         self.agenda = instanciaDaAgenda
-                        print(f"Agenda atual: {agenda}")
                         break
                 except:
                     continue

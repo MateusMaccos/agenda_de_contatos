@@ -32,7 +32,6 @@ class Agenda:
                     destino_uri = self.ns.lookup(agenda)
                     instanciaOutraAgenda = Pyro4.Proxy(destino_uri)
                     self.agendasConectadas.append(instanciaOutraAgenda)
-                    print(f"Registrou pelo servidor de nomes: {agenda}")
                     instanciaOutraAgenda.adicionarOutraAgenda(self.nome)
                     self.limparContatos()
                     self.atualizarContatosPorLista(
@@ -43,7 +42,6 @@ class Agenda:
                     continue
 
     def adicionarOutraAgenda(self, outraAgenda):
-        print(f"Registrou por outra agenda: {outraAgenda}")
         destino_uri = self.ns.lookup(outraAgenda)
         instanciaOutraAgenda = Pyro4.Proxy(destino_uri)
         self.agendasConectadas.append(instanciaOutraAgenda)
