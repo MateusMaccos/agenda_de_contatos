@@ -82,6 +82,11 @@ class TelaAgenda:
         )
         t_sv.start()
 
+        t_sv.join(timeout=1)
+
+        if self.instancia_agenda.erroAoIniciar:
+            messagebox.showerror("Erro na Agenda", f"Ocorreu um erro: {erro}")
+
     def tela_agenda_iniciada(self):
 
         self.ip_sn = self.entrada_ip_sn.get().strip()

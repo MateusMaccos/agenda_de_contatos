@@ -8,19 +8,11 @@ from constantes import agendas
 class Agenda:
     def __init__(self):
         self.estaOnline = True
-        self.contatos = [
-            Contato("Mateus", "85996417275"),
-            Contato("Jorge", "85996417275"),
-            Contato("Pedro", "85996417275"),
-            Contato("Joao", "85996417275"),
-            Contato("Picolo", "85996417275"),
-            Contato("Heitor", "85996417275"),
-            Contato("Guilherme", "85996417275"),
-            Contato("Josias", "85996417275"),
-        ]
+        self.contatos = []
         self.nome = None
         self.agendasConectadas = []
         self.ip_sn = None
+        self.erroAoIniciar = None
 
     def getStatus(self):
         return self.estaOnline
@@ -38,7 +30,6 @@ class Agenda:
                         instanciaOutraAgenda.retornarListaDeContatos()
                     )
                 except Exception as e:
-                    print(e)
                     continue
 
     def adicionarOutraAgenda(self, outraAgenda):
@@ -112,4 +103,4 @@ class Agenda:
             self.conectarAgendas()
             daemon.requestLoop()
         except Exception as e:
-            print(e)
+            self.erroAoIniciar = e
