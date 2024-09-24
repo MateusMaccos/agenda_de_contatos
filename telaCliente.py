@@ -91,9 +91,9 @@ class TelaCliente:
                 self.entrada_telefone_contato.delete(0, tk.END)
                 self.agenda.adicionarContato([nome_contato, telefone_contato])
                 self.lb_usuarios.insert(tk.END, nome_contato)
-            except:
+            except Exception as e:
                 messagebox.showerror(
-                    "Erro", "Não foi possível adicionar esse contato: {e}"
+                    "Erro", f"Não foi possível adicionar esse contato: {e}"
                 )
 
     def telaAtualizarContato(self):
@@ -166,24 +166,30 @@ class TelaCliente:
         except IndexError:
             messagebox.showwarning("Atenção", "Escolha um contato!")
         except Exception as e:
-            messagebox.showerror("Erro", f"Não foi possível apagar esse contato! {e}")
+            messagebox.showerror(
+                "Erro", f"Não foi possível apagar esse contato! {str(e)}"
+            )
 
     def atualizarContatos(self):
         pesquisa = self.entrada_pesquisa.get()
-        self.lbl_agenda_atual.config(text=f"Agenda conectada: {self.agenda.getNome()}")
-        if (
-            not self.compararAgenda(
-                self.contatosDaAgenda, self.agenda.retornarListaDeContatos()
-            )
-            or pesquisa
-        ):
+        self.atualizarAgendaConectada()
+        try:
+            if (
+                not self.compararAgenda(
+                    self.contatosDaAgenda, self.agenda.retornarListaDeContatos()
+                )
+                or pesquisa
+            ):
+                self.lb_usuarios.delete(0, tk.END)
+                self.contatosDaAgenda.clear()
+                for contato in self.agenda.retornarListaDeContatos():
+                    nome_contato = str(contato[0]).lower()
+                    if not pesquisa or pesquisa.lower() in nome_contato:
+                        self.lb_usuarios.insert(tk.END, contato[0])
+                        self.contatosDaAgenda.append(contato)
+        except:
             self.lb_usuarios.delete(0, tk.END)
             self.contatosDaAgenda.clear()
-            for contato in self.agenda.retornarListaDeContatos():
-                nome_contato = str(contato[0]).lower()
-                if not pesquisa or pesquisa.lower() in nome_contato:
-                    self.lb_usuarios.insert(tk.END, contato[0])
-                    self.contatosDaAgenda.append(contato)
 
         self.frame_caixa_usuarios.after(1000, self.atualizarContatos)
 
@@ -229,7 +235,7 @@ class TelaCliente:
         messagebox.showwarning("Aviso", "Nenhuma agenda online!")
 
     def verificandoAgendaOnline(self):
-        if not self.verificarStatusAgenda(self.agenda):
+        if not self.verificarStatusAgenda(self.agenda) or not self.verificar_conexao():
             for agenda in agendas:
                 try:
                     instanciaDaAgenda = self.conectarNaAgenda(agenda)
@@ -241,6 +247,29 @@ class TelaCliente:
             if instanciaDaAgenda != self.agenda:
                 messagebox.showwarning("Aviso", "Nenhuma agenda online!")
         self.frame_caixa_usuarios.after(1000, self.verificandoAgendaOnline)
+
+    def verificar_conexao(self):
+        try:
+            self.agenda._pyroBind()
+            return True
+        except Pyro4.errors.CommunicationError:
+            print("Conexão perdida, tentando reconectar...")
+            return False
+        except Pyro4.errors.NamingError:
+            return False
+        except Exception:
+            return False
+
+    def atualizarAgendaConectada(self):
+        try:
+            self.agenda.getNome()
+            self.lbl_agenda_atual.config(
+                text=f"Agenda conectada: {self.agenda.getNome()}"
+            )
+        except Pyro4.errors.ConnectionClosedError:
+            self.lbl_agenda_atual.config(text="Conexão perdida")
+        except Exception as e:
+            self.lbl_agenda_atual.config(text=f"Erro: {str(e)}")
 
     def criarInterface(self, frameAnterior):
         frameAnterior.destroy()
@@ -312,10 +341,8 @@ class TelaCliente:
 
         self.entrada_pesquisa = ttk.Entry(self.pesquisa)
         self.entrada_pesquisa.pack(pady=5)
-
-        self.lbl_agenda_atual = tk.Label(
-            self.frame_cliente, text=f"Agenda conectada: {self.agenda.getNome()}"
-        )
+        self.lbl_agenda_atual = ttk.Label()
+        self.atualizarAgendaConectada()
         self.lbl_agenda_atual.pack(pady=5)
 
         self.atualizarContatos()

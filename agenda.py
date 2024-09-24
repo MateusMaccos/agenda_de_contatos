@@ -29,13 +29,26 @@ class Agenda:
                     self.atualizarContatosPorLista(
                         instanciaOutraAgenda.retornarListaDeContatos()
                     )
-                except Exception as e:
+                except Exception:
                     continue
 
     def adicionarOutraAgenda(self, outraAgenda):
         destino_uri = self.ns.lookup(outraAgenda)
         instanciaOutraAgenda = Pyro4.Proxy(destino_uri)
         self.agendasConectadas.append(instanciaOutraAgenda)
+
+    def desconectarDasAgendas(self):
+        for agenda in agendas:
+            if agenda != self.nome:
+                try:
+                    destino_uri = self.ns.lookup(agenda)
+                    instanciaOutraAgenda = Pyro4.Proxy(destino_uri)
+                    instanciaOutraAgenda.removerOutraAgenda(self)
+                except Exception:
+                    continue
+
+    def removerOutraAgenda(self, outraAgenda):
+        self.agendasConectadas.remove(outraAgenda)
 
     def retornarListaDeContatos(self):
         listaDeStrings = []

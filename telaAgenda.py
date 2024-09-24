@@ -172,3 +172,4 @@ class TelaAgenda:
         name_server = Pyro4.locateNS()
 
         name_server.remove(self.nome_agenda)
+        self.instancia_agenda.desconectarDasAgendas()
