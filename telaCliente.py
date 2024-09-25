@@ -281,8 +281,8 @@ class TelaCliente:
             self.lbl_agenda_atual.config(text=f"Agenda conectada: {self.agendaAtual}")
         except Pyro4.errors.ConnectionClosedError:
             return
-        except Exception as e:
-            self.lbl_agenda_atual.config(text=f"Erro: {str(e)}")
+        except Exception:
+            self.lbl_agenda_atual.config(text=f"Nenhuma agenda disponível.")
 
     def criarInterface(self, frameAnterior):
         frameAnterior.destroy()
