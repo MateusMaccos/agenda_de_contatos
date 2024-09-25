@@ -261,6 +261,7 @@ class TelaCliente:
                     continue
             if instanciaDaAgenda != self.agenda:
                 messagebox.showwarning("Aviso", "Nenhuma agenda online!")
+                self.lbl_agenda_atual.config(text="Conexão perdida")
         self.frame_caixa_usuarios.after(1000, self.verificandoAgendaOnline)
 
     def verificar_conexao(self):
@@ -276,12 +277,10 @@ class TelaCliente:
 
     def atualizarAgendaConectada(self):
         try:
-            self.agenda.getNome()
-            self.lbl_agenda_atual.config(
-                text=f"Agenda conectada: {self.agenda.getNome()}"
-            )
+            self.agendaAtual = self.agenda.getNome()
+            self.lbl_agenda_atual.config(text=f"Agenda conectada: {self.agendaAtual}")
         except Pyro4.errors.ConnectionClosedError:
-            self.lbl_agenda_atual.config(text="Conexão perdida")
+            return
         except Exception as e:
             self.lbl_agenda_atual.config(text=f"Erro: {str(e)}")
 
