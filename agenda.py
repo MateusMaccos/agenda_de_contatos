@@ -101,6 +101,7 @@ class Agenda:
                     if agenda.getStatus():
                         self.contatos.clear()
                         self.atualizarContatosPorLista(agenda.retornarListaDeContatos())
+                        break
 
     def getNome(self):
         return self.nome

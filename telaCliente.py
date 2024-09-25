@@ -100,7 +100,7 @@ class TelaCliente:
         try:
             selecao = self.lb_usuarios.curselection()[0]
             contatoSelecionado = self.lb_usuarios.get(selecao)
-
+            self.lb_usuarios.selection_clear(0, tk.END)
             self.tela_atualizacao = tk.Tk()
             self.tela_atualizacao.title("Atualizar Contato")
             self.tela_atualizacao.geometry("500x300")
@@ -170,24 +170,39 @@ class TelaCliente:
                 "Erro", f"Não foi possível apagar esse contato! {str(e)}"
             )
 
+    def contatoSelecionao(self):
+        try:
+            self.lb_usuarios.curselection()[0]
+            return True
+        except IndexError:
+            return False
+        except Exception as e:
+            messagebox.showerror("Erro", f"Erro inesperado {e}")
+
     def atualizarContatos(self):
         pesquisa = self.entrada_pesquisa.get()
         self.atualizarAgendaConectada()
         try:
-            if (
-                not self.compararAgenda(
-                    self.contatosDaAgenda, self.agenda.retornarListaDeContatos()
-                )
-                or pesquisa
+            if pesquisa not in ["", None]:
+                if not self.contatoSelecionao():
+                    self.lb_usuarios.delete(0, tk.END)
+                    self.contatosDaAgenda.clear()
+                for contato in self.agenda.retornarListaDeContatos():
+                    nome_contato = str(contato[0]).lower()
+                    if pesquisa.lower() in nome_contato:
+                        if not self.contatoSelecionao():
+                            self.lb_usuarios.insert(tk.END, contato[0])
+                            self.contatosDaAgenda.append(contato)
+            elif not self.compararAgenda(
+                self.contatosDaAgenda, self.agenda.retornarListaDeContatos()
             ):
                 self.lb_usuarios.delete(0, tk.END)
                 self.contatosDaAgenda.clear()
                 for contato in self.agenda.retornarListaDeContatos():
                     nome_contato = str(contato[0]).lower()
-                    if not pesquisa or pesquisa.lower() in nome_contato:
-                        self.lb_usuarios.insert(tk.END, contato[0])
-                        self.contatosDaAgenda.append(contato)
-        except:
+                    self.lb_usuarios.insert(tk.END, contato[0])
+                    self.contatosDaAgenda.append(contato)
+        except Exception as e:
             self.lb_usuarios.delete(0, tk.END)
             self.contatosDaAgenda.clear()
 
@@ -253,7 +268,6 @@ class TelaCliente:
             self.agenda._pyroBind()
             return True
         except Pyro4.errors.CommunicationError:
-            print("Conexão perdida, tentando reconectar...")
             return False
         except Pyro4.errors.NamingError:
             return False
