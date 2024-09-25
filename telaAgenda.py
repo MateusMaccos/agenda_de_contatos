@@ -85,7 +85,7 @@ class TelaAgenda:
         t_sv.join(timeout=1)
 
         if self.instancia_agenda.erroAoIniciar:
-            messagebox.showerror("Erro na Agenda", f"Ocorreu um erro: {erro}")
+            messagebox.showerror("Erro na Agenda", f"Ocorreu um erro na thread Agenda.")
 
     def tela_agenda_iniciada(self):
 
